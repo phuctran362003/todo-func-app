@@ -1,0 +1,152 @@
+{
+	"info": {
+		"_postman_id": "8e50e770-1faf-4194-99f8-8a1bd0f27cf1",
+		"name": "todo-func-app",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "43728787",
+		"_collection_link": "https://trangiaphuc.postman.co/workspace/238d9392-332a-434e-8fa0-58bb24acf3f8/collection/43728787-8e50e770-1faf-4194-99f8-8a1bd0f27cf1?action=share&source=collection_link&creator=43728787"
+	},
+	"item": [
+		{
+			"name": "CRUD todos",
+			"item": [
+				{
+					"name": "create-todo",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Title\": \"hoho\",\r\n    \"Description\": \"tieng cuoi ron vang\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseURL}}/api/todos"
+					},
+					"response": []
+				},
+				{
+					"name": "getAll-todo",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseURL}}/api/todos"
+					},
+					"response": []
+				},
+				{
+					"name": "getById-todo",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseURL}}/api/todos/7bfa5473-838b-467d-aa4f-7311866cc40d"
+					},
+					"response": []
+				},
+				{
+					"name": "delete-todo",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseURL}}/api/todos/1d8bebd0-e11e-4d45-a8b5-99ad8430c3ed"
+					},
+					"response": []
+				},
+				{
+					"name": "update-todo",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Title\": \"hehehehehehehehehehehe\",\r\n    \"Description\": \"tieng cuoi ron vang\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseURL}}/api/todos/c50901e5-4945-4e45-926f-24fc78dee"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "seed-all-data",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": "{{baseURL}}/api/seed-all-data"
+			},
+			"response": []
+		},
+		{
+			"name": "clear-data",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": "{{baseURL}}/api/clear-data"
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
