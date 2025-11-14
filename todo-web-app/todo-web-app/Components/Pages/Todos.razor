@@ -1,0 +1,321 @@
+@page "/todos"
+@using todo_web_app.Models
+@using todo_web_app.Services
+@using Microsoft.Extensions.Logging
+@inject TodoService TodoService
+@inject IJSRuntime JS
+@inject ILogger<Todos> Logger
+
+<PageTitle>Todo App</PageTitle>
+
+<div class="todo-container">
+    <div class="todo-header">
+        <h1>My Todo List</h1>
+        <button class="btn btn-primary btn-add" @onclick="OpenCreateModal">
+            Add New Todo
+        </button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading">
+            <p>Loading todos...</p>
+        </div>
+    }
+    else if (todos == null || todos.Count == 0)
+    {
+        <div class="empty-state">
+            <p>No todos yet. Create your first one!</p>
+        </div>
+    }
+    else
+    {
+        <div class="todo-stats">
+            <span>Total: <strong>@todos.Count</strong></span>
+            <span>Completed: <strong>@todos.Count(t => t.IsCompleted)</strong></span>
+            <span>Pending: <strong>@todos.Count(t => !t.IsCompleted)</strong></span>
+        </div>
+
+        <div class="todos-list">
+            @foreach (var todo in todos.OrderByDescending(t => t.CreatedAt))
+            {
+                <div class="todo-item @(todo.IsCompleted ? "completed" : "")">
+                    <div class="todo-checkbox">
+                        <input type="checkbox" 
+                               @checked="todo.IsCompleted" 
+                               @onchange="async (ChangeEventArgs e) => await ToggleComplete(todo, (bool)e.Value!)"
+                               class="form-check-input" />
+                    </div>
+
+                    <div class="todo-content">
+                        <h3 class="todo-title">@todo.Title</h3>
+                        @if (!string.IsNullOrEmpty(todo.Description))
+                        {
+                            <p class="todo-description">@todo.Description</p>
+                        }
+                        <small class="todo-meta">
+                            Created: @todo.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                            @if (todo.UpdatedAt.HasValue)
+                            {
+                                <span> | Updated: @todo.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                            }
+                        </small>
+                    </div>
+
+                    <div class="todo-actions">
+                        <button class="btn btn-sm btn-edit" @onclick="() => OpenEditModal(todo)">
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-delete" @onclick="() => DeleteTodo(todo.Id)">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Modal Create/Edit -->
+@if (showModal)
+{
+    <div class="modal-overlay" @onclick="CloseModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>@(isEditing ? "Edit Todo" : "Create New Todo")</h2>
+                <button class="btn-close" @onclick="CloseModal">Close</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="title">Title *</label>
+                    @if (isEditing)
+                    {
+                        <input type="text" 
+                               id="title" 
+                               class="form-control" 
+                               @bind="updateFormModel.Title" 
+                               placeholder="Enter todo title" />
+                    }
+                    else
+                    {
+                        <input type="text" 
+                               id="title" 
+                               class="form-control" 
+                               @bind="formModel.Title" 
+                               placeholder="Enter todo title" />
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    @if (isEditing)
+                    {
+                        <textarea id="description" 
+                                  class="form-control" 
+                                  @bind="updateFormModel.Description" 
+                                  placeholder="Enter todo description (optional)"
+                                  rows="3"></textarea>
+                    }
+                    else
+                    {
+                        <textarea id="description" 
+                                  class="form-control" 
+                                  @bind="formModel.Description" 
+                                  placeholder="Enter todo description (optional)"
+                                  rows="3"></textarea>
+                    }
+                </div>
+
+                @if (isEditing)
+                {
+                    <div class="form-group form-check">
+                        <input type="checkbox" 
+                               id="isCompleted" 
+                               class="form-check-input" 
+                               @bind="updateFormModel.IsCompleted" />
+                        <label class="form-check-label" for="isCompleted">
+                            Mark as completed
+                        </label>
+                    </div>
+                }
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                <button class="btn btn-primary" @onclick="SaveTodo">
+                    @(isEditing ? "Update" : "Create")
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">
+                    @errorMessage
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private List<TodoItem> todos = new();
+    private bool isLoading = true;
+    private bool showModal = false;
+    private bool isEditing = false;
+    private string errorMessage = string.Empty;
+    private string? editingTodoId = null;
+
+    private CreateTodoItemDto formModel = new();
+    private UpdateTodoItemDto updateFormModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogInformation("Todos component initialized");
+        await LoadTodos();
+    }
+
+    private async Task LoadTodos()
+    {
+        Logger.LogInformation("Loading todos...");
+        isLoading = true;
+        todos = await TodoService.GetAllTodosAsync();
+        Logger.LogInformation($"Loaded {todos.Count} todos");
+        isLoading = false;
+    }
+
+    private void OpenCreateModal()
+    {
+        Logger.LogInformation("Opening Create Modal");
+        isEditing = false;
+        editingTodoId = null;
+        formModel = new CreateTodoItemDto() { Title = "", Description = "" };
+        errorMessage = string.Empty;
+        showModal = true;
+        StateHasChanged();
+    }
+
+    private void OpenEditModal(TodoItem todo)
+    {
+        Logger.LogInformation($"Opening Edit Modal for todo ID: {todo.Id}");
+        isEditing = true;
+        editingTodoId = todo.Id;
+        updateFormModel = new UpdateTodoItemDto
+        {
+            Title = todo.Title,
+            Description = todo.Description ?? "",
+            IsCompleted = todo.IsCompleted
+        };
+        formModel = new CreateTodoItemDto();
+        errorMessage = string.Empty;
+        showModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        formModel = new CreateTodoItemDto();
+        updateFormModel = new UpdateTodoItemDto();
+        errorMessage = string.Empty;
+    }
+
+    private async Task SaveTodo()
+    {
+        Logger.LogInformation($"SaveTodo called. IsEditing: {isEditing}");
+        errorMessage = string.Empty;
+
+        if (isEditing)
+        {
+            if (string.IsNullOrWhiteSpace(updateFormModel.Title))
+            {
+                Logger.LogWarning("Update validation failed: Title is empty");
+                errorMessage = "Title is required!";
+                return;
+            }
+
+            Logger.LogInformation($"Updating todo with ID: {editingTodoId}");
+            var result = await TodoService.UpdateTodoAsync(editingTodoId, updateFormModel);
+            if (result != null)
+            {
+                Logger.LogInformation($"Update successful, reloading todos");
+                await LoadTodos();
+                CloseModal();
+            }
+            else
+            {
+                Logger.LogError($"Update failed for todo ID: {editingTodoId}");
+                errorMessage = "Failed to update todo!";
+            }
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(formModel.Title))
+            {
+                Logger.LogWarning("Create validation failed: Title is empty");
+                errorMessage = "Title is required!";
+                return;
+            }
+
+            Logger.LogInformation($"Creating new todo with title: {formModel.Title}");
+            var result = await TodoService.CreateTodoAsync(formModel);
+            if (result != null)
+            {
+                Logger.LogInformation($"Create successful with ID: {result.Id}, reloading todos");
+                await LoadTodos();
+                CloseModal();
+            }
+            else
+            {
+                Logger.LogError($"Create failed");
+                errorMessage = "Failed to create todo!";
+            }
+        }
+    }
+
+    private async Task DeleteTodo(string id)
+    {
+        Logger.LogInformation($"Delete requested for todo ID: {id}");
+        if (await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this todo?"))
+        {
+            Logger.LogInformation($"User confirmed delete for todo ID: {id}");
+            var success = await TodoService.DeleteTodoAsync(id);
+            if (success)
+            {
+                Logger.LogInformation($"Delete successful, reloading todos");
+                await LoadTodos();
+            }
+            else
+            {
+                Logger.LogError($"Delete failed for todo ID: {id}");
+                errorMessage = "Failed to delete todo!";
+            }
+        }
+        else
+        {
+            Logger.LogInformation($"User cancelled delete for todo ID: {id}");
+        }
+    }
+
+    private async Task ToggleComplete(TodoItem todo, bool isCompleted)
+    {
+        Logger.LogInformation($"Toggling completion for todo ID: {todo.Id}, IsCompleted: {isCompleted}");
+        var updateDto = new UpdateTodoItemDto
+        {
+            Title = todo.Title,
+            Description = todo.Description,
+            IsCompleted = isCompleted
+        };
+
+        var result = await TodoService.UpdateTodoAsync(todo.Id, updateDto);
+        if (result != null)
+        {
+            Logger.LogInformation($"Toggle successful, reloading todos");
+            await LoadTodos();
+        }
+        else
+        {
+            Logger.LogError($"Toggle failed for todo ID: {todo.Id}");
+        }
+    }
+}
