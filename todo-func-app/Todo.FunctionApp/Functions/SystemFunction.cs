@@ -59,39 +59,30 @@ public class SystemFunction
     private async Task ClearDataAsync()
     {
         var database = _cosmosDbContext.GetContainer(CosmosDbContext.TodoItemsContainer).Database;
-
+        
         // Delete and recreate TodoItems container
         try
         {
             await database.GetContainer(CosmosDbContext.TodoItemsContainer).DeleteContainerAsync();
         }
         catch { }
-
-        // Delete and recreate Users container
-        try
-        {
-            await database.GetContainer(CosmosDbContext.UsersContainer).DeleteContainerAsync();
-        }
-        catch { }
-
+        
         // Reinitialize containers
         await _cosmosDbContext.InitializeAsync();
-    }
-
-    private async Task SeedTodoItemsAsync()
+    }    private async Task SeedTodoItemsAsync()
     {
         var items = new List<TodoItem>
             {
-                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Buy groceries", IsCompleted = false, userId = "system" },
-                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Finish project report", IsCompleted = true, userId = "system" },
-                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Call mom", IsCompleted = false, userId = "system" },
-                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Book flight tickets", IsCompleted = true, userId = "system" },
-                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Read a book", IsCompleted = false, userId = "system" },
-                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Clean the house", IsCompleted = true, userId = "system" },
-                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Pay electricity bill", IsCompleted = false, userId = "system" },
-                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Exercise for 30 minutes", IsCompleted = true, userId = "system" },
-                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Prepare dinner", IsCompleted = false, userId = "system" },
-                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Review meeting notes", IsCompleted = true, userId = "system" }
+                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Buy groceries", IsCompleted = false },
+                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Finish project report", IsCompleted = true },
+                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Call mom", IsCompleted = false },
+                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Book flight tickets", IsCompleted = true },
+                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Read a book", IsCompleted = false },
+                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Clean the house", IsCompleted = true },
+                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Pay electricity bill", IsCompleted = false },
+                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Exercise for 30 minutes", IsCompleted = true },
+                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Prepare dinner", IsCompleted = false },
+                new TodoItem { id = Guid.NewGuid().ToString(), Title = "Review meeting notes", IsCompleted = true }
             };
         foreach (var item in items)
         {

@@ -14,6 +14,6 @@ public class TodoItemRepository : CosmosGenericRepository<TodoItem>
 
     protected override string GetPartitionKey(TodoItem entity)
     {
-        return entity.userId ?? "system";
+        return entity.id;
     }
 }

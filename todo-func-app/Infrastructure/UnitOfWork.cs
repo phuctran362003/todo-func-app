@@ -13,7 +13,6 @@ public class UnitOfWork : IUnitOfWork
     private readonly ILoggerFactory _loggerFactory;
 
     private IGenericRepository<TodoItem>? _todoItems;
-    private IGenericRepository<User>? _users;
 
     public UnitOfWork(CosmosDbContext cosmosDbContext, ICurrentTime currentTime, IClaimsService claimsService, ILoggerFactory loggerFactory)
     {
@@ -30,14 +29,6 @@ public class UnitOfWork : IUnitOfWork
            _claimsService,
            _loggerFactory.CreateLogger<CosmosGenericRepository<TodoItem>>()
        );
-
-    public IGenericRepository<User> Users =>
-        _users ??= new CosmosGenericRepository<User>(
-            _cosmosDbContext.GetContainer("Users"),
-            _currentTime,
-            _claimsService,
-            _loggerFactory.CreateLogger<CosmosGenericRepository<User>>()
-        );
 
     public void Dispose()
     {
