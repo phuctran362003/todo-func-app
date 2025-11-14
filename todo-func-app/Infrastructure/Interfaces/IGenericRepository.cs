@@ -19,4 +19,7 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
     // UPDATE Methods
     Task<bool> Update(TEntity entity);
     Task<bool> UpdateRange(List<TEntity> entities);
+
+    // DELETE Methods
+    Task<bool> HardRemoveAsync(TEntity entity);
 }
