@@ -1,4 +1,6 @@
-﻿using Infrastructure;
+﻿using Application.Interfaces;
+using Application.Services;
+using Infrastructure;
 using Infrastructure.Commons;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
@@ -26,6 +28,7 @@ public static class IocContainer
         services.AddSingleton<IClaimsService, ClaimsService>();
         services.AddSingleton<ICurrentTime, CurrentTime>();
         services.AddSingleton<ILoggerService, LoggerService>();
+        services.AddScoped<ITodoService, TodoService>();
         services.AddHttpContextAccessor();
 
         return services;
