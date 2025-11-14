@@ -4,7 +4,6 @@ using Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 
 namespace Todo.FunctionApp.Functions;
@@ -22,14 +21,16 @@ public class SystemFunction
         _cosmosDbContext = cosmosDbContext;
     }
 
-    [Function("SeedTodoItems")]
-    public async Task<IActionResult> SeedTodoItemsHttpTrigger(
-                    [HttpTrigger(AuthorizationLevel.Function, "post", Route = "seed-todoitems")] HttpRequest req)
+    [Function("SeedAllData")]
+    public async Task<IActionResult> SeedAllDataTrigger(
+                    [HttpTrigger(AuthorizationLevel.Function, "post", Route = "seed-all-data")] HttpRequest req)
     {
         try
         {
+            await ClearDataAsync();
+
             await SeedTodoItemsAsync();
-            return new OkObjectResult(ApiResult.Success("201", "TodoItems seeded successfully."));
+            return new OkObjectResult(ApiResult.Success("201", "seeded successfully."));
         }
         catch (Exception ex)
         {
@@ -37,6 +38,7 @@ public class SystemFunction
             return new BadRequestObjectResult(ApiResult.Failure("500", "Error seeding TodoItems."));
         }
     }
+
 
     [Function("ClearData")]
     public async Task<IActionResult> ClearDataHttpTrigger(
@@ -57,21 +59,21 @@ public class SystemFunction
     private async Task ClearDataAsync()
     {
         var database = _cosmosDbContext.GetContainer(CosmosDbContext.TodoItemsContainer).Database;
-        
+
         // Delete and recreate TodoItems container
         try
         {
             await database.GetContainer(CosmosDbContext.TodoItemsContainer).DeleteContainerAsync();
         }
         catch { }
-        
+
         // Delete and recreate Users container
         try
         {
             await database.GetContainer(CosmosDbContext.UsersContainer).DeleteContainerAsync();
         }
         catch { }
-        
+
         // Reinitialize containers
         await _cosmosDbContext.InitializeAsync();
     }
